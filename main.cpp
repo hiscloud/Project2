@@ -36,6 +36,8 @@ class CParallel
 		static void *parallel_API(void *context)
 		{	((CParallel *)context)->run_process();
 		}
+		
+		
 
     private:
         void *run_process(void){
@@ -47,7 +49,9 @@ class CParallel
             pthread_exit(NULL);
 			return 0;
 		}
+		
 
+		
         void toon_signal(void)
 		{   pthread_mutex_lock(toon_signal_mutex);
                 if(SHARED->COUNTING<2 && thread_id_obj == 0){
@@ -101,14 +105,79 @@ class CParallel
 				}
             pthread_mutex_unlock(toon_signal_mutex);
         }
+		
+		
 };
+/////////////////////////////////////////////////////
+		char *CreateArrayDbl(int n){
+			char * arr = (char*) calloc( n, sizeof(char) );
+			if (!arr) {
+			fprintf(stderr, "Memory allocation failed: CreateArrayDbl");
+			}
+			return arr;
+		}
 
+		//! allocate memory for a matrix of chars
+	 char **CreateMatrixDbl(int nrows, int ncols){
+			int i;
+			char ** matrix = (char **) calloc( nrows, sizeof(char*) );
+			if(!matrix){
+				fprintf(stderr, "Memory allocation failed: CreateMatrixDbl");
+			}
+
+			for(i=0;i<nrows;i++){
+				matrix[i] = CreateArrayDbl(ncols);
+			}
+
+			return matrix;
+			}	
+
+		//! free memory for the matrix
+		void FreeMatrixDbl(char ** matrix, int nrows){
+			int i;
+			for(i=0;i<nrows;i++){
+				free( matrix[i] );
+			}
+			free(matrix);
+		}
 int main (int argc, char *argv[])
-{   int total_threads = 5;
+{  
+
+int total_threads = 5;
     CParallel obj[5];
     MUTEX_SHARED SHARED;
     SHARED.COUNTING=0;
 
+	
+		// dimension of the matrix
+	int rows = 5, cols = 5;
+	
+	// declare the pointer of the matrix
+	char ** matrix;
+	
+	// create matrix
+	matrix = CreateMatrixDbl(rows, cols);
+
+	// print contents of the matrix
+	for (int i = 0; i < rows; i++){
+		
+		for (int j = 0; j < cols; j++){
+			printf("%f ", matrix[i][j]);
+		}
+		printf("\n");
+	}
+	
+	
+	
+	// free memory
+	FreeMatrixDbl(matrix, rows);
+	
+
+	char k='-';
+
+	
+
+	
     pthread_mutex_init(&toon_signal_mutex, NULL);
 
     for(int i=0;i<total_threads;i++){
