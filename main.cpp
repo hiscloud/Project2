@@ -7,18 +7,131 @@ using namespace std;
 #include <pthread.h>
 #include <stdio.h>
 #include <cstdlib> // exit :: may be needed on CodeBlocks;
-
+#include<random>
 pthread_mutex_t toon_signal_mutex;
 struct MUTEX_SHARED{
 int COUNTING;
 int AGENT;
 };
 
+
+class piece{
+	public:
+	piece(){};
+	~piece(){};
+	bool carrot; //is a carrot
+	bool mt;
+	bool mv;
+	bool carry; // carry a carrot
+	int col;
+	int row;
+	string name;
+	
+	void init(string n){
+		srand( (unsigned)time( NULL ) );
+		col=rand()%5;
+		row=rand()%5;
+		name=n;
+	}
+	
+	
+	
+};
+
+class table{
+	public:
+	table(){};
+	~table(){};	
+	string matrix[5][5];
+	//class piece *pieceOBJ=NULL;
+	piece arr[7];//lowest number is 7
+	int arrIND=0;
+	void init(){
+		srand( (unsigned)time( NULL ) );
+		for (int i=0;i<5;i++){
+			for (int j=0;j<5;j++){
+				matrix[i][j]="-   ";
+			}	
+		}
+		
+			
+	}
+
+	void addPiece(piece p){  
+
+	
+		while(checkOn(p.col,p.row)){
+			p.col=rand()%5;
+			p.row=rand()%5;	
+				
+		}
+		matrix[p.col][p.row]=p.name;
+		arr[arrIND]=p;
+		arrIND++;
+		p.carry=false;
+	}	
+	
+	void printTable(){
+		for (int i=0;i<5;i++){
+			for(int j=0;j<5;j++){
+			cout<<matrix[i][j];
+		} 
+		cout<<endl;
+		}
+	}	
+	//random a point which is around the piece
+	void move(piece p){
+		matrix[p.col][p.row]="-   ";
+		int x=rand()%5,y=rand()%5;//(x,y)
+		while((checkOn(x,y))||(p.col-x>1||p.col-x<-1)||(p.row-y>1||p.row-y<-1)){//(then it should change)
+			x=rand()%5;
+			y=rand()%5;	
+		}
+		p.col=x;
+		p.row=y;
+		if(getPiece(x,y).carrot){
+			p.name-="   ";
+			p.name+="(c)";
+			
+		}
+		matrix[p.col][p.row]=p.name;
+		setPiece();
+		
+	}
+	//check if the place has a piece
+	bool checkOn(int x1, int y1){
+		
+		for(int i=0;i<arrIND;i++){
+			if(x1==arr[i].col &&y1==arr[i].row)
+				return true;
+		}
+		return false;
+	}
+	
+	void setPiece(){
+		for(int i=0;i<arrIND;i++){
+			matrix[arr[i].col][arr[i].row]=arr[i].name;
+			
+		}
+		
+	}
+	
+	piece getPiece(int x, int y){
+		piece pNull;	
+			for(int i=0;i<arrIND;i++){
+			if(x==arr[i].col &&y==arr[i].row)
+				return arr[arrIND];
+		}
+		return pNull;
+		
+	}
+};
+
 class CParallel
 {      public:
 		CParallel(){};
 		~CParallel(){};
-
+	
 		int thread_id_obj;
 		pthread_t thread_id;
 		pthread_mutex_t *toon_signal_mutex = NULL;
@@ -31,6 +144,8 @@ class CParallel
 		    SHARED = (MUTEX_SHARED*)temp_SHARED;
 		    toon_signal_mutex = (pthread_mutex_t*)temp_toon_signal_mutex;
 		    stop = 0;
+			
+			/////booleans not setted
 		}
 
 		static void *parallel_API(void *context)
@@ -108,76 +223,66 @@ class CParallel
 		
 		
 };
-/////////////////////////////////////////////////////
-		char *CreateArrayDbl(int n){
-			char * arr = (char*) calloc( n, sizeof(char) );
-			if (!arr) {
-			fprintf(stderr, "Memory allocation failed: CreateArrayDbl");
-			}
-			return arr;
-		}
 
-		//! allocate memory for a matrix of chars
-	 char **CreateMatrixDbl(int nrows, int ncols){
-			int i;
-			char ** matrix = (char **) calloc( nrows, sizeof(char*) );
-			if(!matrix){
-				fprintf(stderr, "Memory allocation failed: CreateMatrixDbl");
-			}
-
-			for(i=0;i<nrows;i++){
-				matrix[i] = CreateArrayDbl(ncols);
-			}
-
-			return matrix;
-			}	
-
-		//! free memory for the matrix
-		void FreeMatrixDbl(char ** matrix, int nrows){
-			int i;
-			for(i=0;i<nrows;i++){
-				free( matrix[i] );
-			}
-			free(matrix);
-		}
 int main (int argc, char *argv[])
 {  
 
+  	
 int total_threads = 5;
     CParallel obj[5];
     MUTEX_SHARED SHARED;
     SHARED.COUNTING=0;
 
-	
-		// dimension of the matrix
-	int rows = 5, cols = 5;
-	
-	// declare the pointer of the matrix
-	char ** matrix;
-	
-	// create matrix
-	matrix = CreateMatrixDbl(rows, cols);
-
-	// print contents of the matrix
-	for (int i = 0; i < rows; i++){
+	string table1[5][5];
+	for (int i=0;i<5;i++){
+		for (int j=0;j<5;j++){
+			table1[i][j]="-   ";
 		
-		for (int j = 0; j < cols; j++){
-			printf("%f ", matrix[i][j]);
-		}
-		printf("\n");
+		}	
+		
+		
 	}
-	
-	
-	
-	// free memory
-	FreeMatrixDbl(matrix, rows);
-	
+/////////////////////////////////////////////////////////////////////////////////////////
 
-	char k='-';
 
-	
 
+
+
+piece marvin,bunny,tweety,devil,c1,c2,mount;
+bunny.init("B   ");
+tweety.init("T   ");
+c1.init("C   ");
+c1.carrot=true;
+c2.init("C   ");
+c2.carrot=true;
+devil.init("D   ");
+marvin.init("M   ");
+marvin.mv=true;
+mount.init("F   ");
+mount.mt=true;
+
+	table* myTable= new table();
+	myTable->init();
+	myTable->addPiece(devil);	
+	myTable->addPiece(bunny);
+	myTable->addPiece(tweety);
+	myTable->addPiece(marvin);
+	myTable->addPiece(mount);
+	myTable->addPiece(c1);
+	myTable->addPiece(c2);
+	myTable->printTable();
 	
+	myTable->move(devil);
+	myTable->move(bunny);// duplicated
+	
+	myTable->printTable();
+	
+	
+	
+	
+		
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//threads
     pthread_mutex_init(&toon_signal_mutex, NULL);
 
     for(int i=0;i<total_threads;i++){
